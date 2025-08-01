@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marina Fatture - Gestione Fornitori e Fatture</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Marina Fatture</h1>
+            <nav>
+                <button id="nav-dashboard" class="nav-btn active">Dashboard</button>
+                <button id="nav-suppliers" class="nav-btn">Fornitori</button>
+                <button id="nav-invoices" class="nav-btn">Fatture</button>
+                <button id="nav-reports" class="nav-btn">Report</button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <div id="dashboard-view" class="view active">
+            <h2>Dashboard</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Fornitori Totali</h3>
+                    <p id="total-suppliers">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Fatture Totali</h3>
+                    <p id="total-invoices">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Importo Totale</h3>
+                    <p id="total-amount">€0.00</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="suppliers-view" class="view">
+            <div class="view-header">
+                <h2>Fornitori</h2>
+                <button id="add-supplier-btn" class="btn-primary">Aggiungi Fornitore</button>
+            </div>
+            <div id="suppliers-list" class="data-list"></div>
+        </div>
+
+        <div id="invoices-view" class="view">
+            <div class="view-header">
+                <h2>Fatture</h2>
+                <button id="add-invoice-btn" class="btn-primary">Aggiungi Fattura</button>
+            </div>
+            <div id="invoices-list" class="data-list"></div>
+        </div>
+
+        <div id="reports-view" class="view">
+            <h2>Report e Analisi</h2>
+            <div id="reports-content">
+                <p>Report e classifiche verranno implementati qui.</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal per aggiungere/modificare fornitori -->
+    <div id="supplier-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3 id="supplier-modal-title">Aggiungi Fornitore</h3>
+            <form id="supplier-form">
+                <input type="hidden" id="supplier-id">
+                <div class="form-group">
+                    <label for="supplier-name">Nome Fornitore *</label>
+                    <input type="text" id="supplier-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="supplier-vat">Partita IVA</label>
+                    <input type="text" id="supplier-vat">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" id="cancel-supplier">Annulla</button>
+                    <button type="submit" class="btn-primary">Salva</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal per aggiungere/modificare fatture -->
+    <div id="invoice-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3 id="invoice-modal-title">Aggiungi Fattura</h3>
+            <form id="invoice-form">
+                <input type="hidden" id="invoice-id">
+                <div class="form-group">
+                    <label for="invoice-number">Numero Fattura *</label>
+                    <input type="text" id="invoice-number" required>
+                </div>
+                <div class="form-group">
+                    <label for="invoice-supplier">Fornitore *</label>
+                    <select id="invoice-supplier" required>
+                        <option value="">Seleziona fornitore...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="invoice-amount">Importo *</label>
+                    <input type="number" id="invoice-amount" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="invoice-date">Data *</label>
+                    <input type="date" id="invoice-date" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" id="cancel-invoice">Annulla</button>
+                    <button type="submit" class="btn-primary">Salva</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/database.js"></script>
+    <script src="js/llm.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

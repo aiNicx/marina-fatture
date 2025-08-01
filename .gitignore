@@ -1,0 +1,23 @@
+# File di configurazione con API keys sensibili (commentato per deploy)
+# js/config.js
+
+# File temporanei
+*.tmp
+*.log
+
+# Directory node_modules (se in futuro aggiungi npm)
+node_modules/
+
+# File di sistema
+.DS_Store
+Thumbs.db
+
+# File di IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# File di build (se in futuro aggiungi un build process)
+dist/
+build/
