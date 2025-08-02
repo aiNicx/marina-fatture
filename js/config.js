@@ -2,9 +2,9 @@
 const CONFIG = {
     // Configurazione LLM OpenRouter
     LLM: {
-        API_KEY: '', // Inserire la propria API key di OpenRouter (opzionale)
+        API_KEY: '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', // Inserire la propria API key di OpenRouter (opzionale)
         BASE_URL: 'https://openrouter.ai/api/v1',
-        MODEL_ID: 'openai/gpt-3.5-turbo', // Modello da utilizzare
+        MODEL_ID: 'qwen/qwen3-235b-a22b:free', // Modello da utilizzare
         SYSTEM_PROMPT: `Sei un assistente AI specializzato nell'analisi e gestione di fatture e fornitori.
 Aiuti gli utenti a:
 - Analizzare dati finanziari
