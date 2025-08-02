@@ -309,14 +309,25 @@ class MarinaFattureApp {
             listContainer.innerHTML = invoices.map(invoice => `
                 <div class="data-item">
                     <div class="data-info">
-                        <h4>Fattura ${this.escapeHtml(invoice.number)}</h4>
+                        <h4>
+                            Fattura ${this.escapeHtml(invoice.number)}
+                            <span class="status-badge ${invoice.status === 'pagata' ? 'status-paid' : 'status-unpaid'}">
+                                ${invoice.status === 'pagata' ? '✅ Pagata' : '⏳ Da Pagare'}
+                            </span>
+                        </h4>
                         <p>
                             ${invoice.supplier?.name || 'Fornitore non trovato'} - 
                             ${ConfigUtils.formatCurrency(invoice.amount)} - 
                             ${ConfigUtils.formatDate(invoice.date)}
+                            ${invoice.file_name ? `<br><small>📎 ${invoice.file_name}</small>` : ''}
                         </p>
                     </div>
                     <div class="data-actions">
+                        ${invoice.status === 'da_pagare' ? 
+                            `<button class="btn-small btn-primary" onclick="app.markAsPaid('${invoice.id}')">
+                                Segna Pagata
+                            </button>` : ''
+                        }
                         <button class="btn-small btn-delete" onclick="app.deleteInvoice('${invoice.id}')">
                             Elimina
                         </button>
@@ -354,8 +365,12 @@ class MarinaFattureApp {
                     `<option value="${supplier.id}">${this.escapeHtml(supplier.name)}</option>`
                 ).join('');
             
-            // Imposta data odierna
+            // Imposta data odierna e status default
             document.getElementById('invoice-date').value = new Date().toISOString().split('T')[0];
+            document.getElementById('invoice-status').value = 'da_pagare';
+            
+            // Gestione upload file per estrazione automatica
+            this.setupFileUploadHandler();
             
             modal.style.display = 'block';
             document.getElementById('invoice-number').focus();
@@ -371,6 +386,8 @@ class MarinaFattureApp {
             const supplierId = document.getElementById('invoice-supplier').value;
             const amount = document.getElementById('invoice-amount').value;
             const date = document.getElementById('invoice-date').value;
+            const status = document.getElementById('invoice-status').value;
+            const fileInput = document.getElementById('invoice-file');
             
             // Validazione
             if (!number) {
@@ -397,7 +414,10 @@ class MarinaFattureApp {
                 number,
                 supplier_id: supplierId,
                 amount: parseFloat(amount),
-                date
+                date,
+                status: status || 'da_pagare',
+                file_name: fileInput.files[0]?.name || null,
+                file_path: null // Per ora non salviamo il file, solo il nome
             };
             
             await window.dbManager.addInvoice(invoiceData);
@@ -425,6 +445,17 @@ class MarinaFattureApp {
             
         } catch (error) {
             this.showError(error.message);
+        }
+    }
+
+    async markAsPaid(id) {
+        try {
+            await window.dbManager.updateInvoiceStatus(id, 'pagata');
+            this.showSuccess('Fattura segnata come pagata!');
+            await this.loadInvoices();
+            await this.loadDashboard();
+        } catch (error) {
+            this.showError('Errore aggiornamento status: ' + error.message);
         }
     }
     
@@ -564,6 +595,107 @@ class MarinaFattureApp {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    // Configura gestione upload file per estrazione automatica
+    setupFileUploadHandler() {
+        const fileInput = document.getElementById('invoice-file');
+        
+        // Rimuovi listener precedenti
+        fileInput.removeEventListener('change', this.handleFileUpload);
+        
+        // Aggiungi nuovo listener
+        this.handleFileUpload = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            // Verifica tipo file
+            const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+            if (!validTypes.includes(file.type)) {
+                this.showError('Tipo file non supportato. Usa PNG, JPG o PDF.');
+                fileInput.value = '';
+                return;
+            }
+            
+            // Verifica dimensione (max 5MB)
+            if (file.size > CONFIG.APP.MAX_FILE_SIZE) {
+                this.showError('File troppo grande. Massimo 5MB.');
+                fileInput.value = '';
+                return;
+            }
+            
+            try {
+                // Mostra loading
+                document.body.style.cursor = 'wait';
+                const originalText = document.querySelector('#invoice-modal .btn-primary').textContent;
+                document.querySelector('#invoice-modal .btn-primary').textContent = 'Estraendo dati...';
+                
+                // Estrai dati con LLM
+                const extracted = await window.llmManager.extractInvoiceData(file);
+                
+                // Compila campi automaticamente
+                if (extracted.numero) {
+                    document.getElementById('invoice-number').value = extracted.numero;
+                }
+                
+                if (extracted.importo) {
+                    // Rimuovi simboli di valuta e converti
+                    const amount = extracted.importo.toString()
+                        .replace(/[€$£,\s]/g, '')
+                        .replace(/[.,](\d{2})$/, '.$1'); // Gestisce decimali
+                    document.getElementById('invoice-amount').value = amount;
+                }
+                
+                if (extracted.data) {
+                    document.getElementById('invoice-date').value = extracted.data;
+                }
+                
+                // Gestisci fornitore
+                if (extracted.fornitore) {
+                    await this.handleSupplierFromExtraction(extracted.fornitore);
+                }
+                
+                this.showSuccess('✅ Dati estratti automaticamente dalla fattura!');
+                
+            } catch (error) {
+                this.showError('Errore estrazione dati: ' + error.message);
+                ConfigUtils.error('Errore estrazione OCR:', error);
+            } finally {
+                // Rimuovi loading
+                document.body.style.cursor = 'default';
+                document.querySelector('#invoice-modal .btn-primary').textContent = originalText;
+            }
+        };
+        
+        fileInput.addEventListener('change', this.handleFileUpload);
+    }
+
+    // Gestisce fornitore estratto da OCR
+    async handleSupplierFromExtraction(supplierName) {
+        try {
+            const supplierId = await window.dbManager.findOrCreateSupplier(supplierName);
+            document.getElementById('invoice-supplier').value = supplierId;
+            
+            // Se è un nuovo fornitore, ricarica la lista
+            const currentOptions = document.getElementById('invoice-supplier').querySelectorAll('option');
+            const exists = Array.from(currentOptions).some(opt => opt.value === supplierId);
+            
+            if (!exists) {
+                // Ricarica suppliers
+                const suppliers = await window.dbManager.getSuppliers();
+                const supplierSelect = document.getElementById('invoice-supplier');
+                supplierSelect.innerHTML = '<option value="">Seleziona fornitore...</option>' +
+                    suppliers.map(supplier => 
+                        `<option value="${supplier.id}" ${supplier.id === supplierId ? 'selected' : ''}>
+                            ${this.escapeHtml(supplier.name)}
+                        </option>`
+                    ).join('');
+            }
+            
+        } catch (error) {
+            ConfigUtils.error('Errore gestione fornitore:', error);
+            // Non bloccare il processo, l'utente può selezionare manualmente
+        }
     }
 }
 

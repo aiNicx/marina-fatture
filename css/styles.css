@@ -19,6 +19,29 @@ body {
     padding: 0 20px;
 }
 
+/* Status badges */
+.status-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+.status-paid {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+}
+
+.status-unpaid {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
+}
+
 /* Header */
 header {
     background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);

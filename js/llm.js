@@ -223,6 +223,81 @@ ${context.invoices.slice(0, 15).map(i =>
         return contextParts.join('\n\n');
     }
     
+    // Estrae dati da immagine/PDF fattura
+    async extractInvoiceData(file) {
+        if (!this.isConfigured) {
+            throw new Error('LLM non configurato per estrazione dati');
+        }
+        
+        const base64 = await this.fileToBase64(file);
+        
+        const messages = [
+            {
+                role: 'system',
+                content: 'Estrai SOLO questi dati dalla fattura italiana: numero fattura, nome fornitore, importo totale, data. Rispondi in formato JSON: {"numero": "...", "fornitore": "...", "importo": "...", "data": "YYYY-MM-DD"}. Se non trovi un dato, usa stringa vuota "".'
+            },
+            {
+                role: 'user',
+                content: [
+                    {
+                        type: 'text',
+                        text: 'Estrai i dati da questa fattura:'
+                    },
+                    {
+                        type: 'image_url',
+                        image_url: {
+                            url: `data:${file.type};base64,${base64}`
+                        }
+                    }
+                ]
+            }
+        ];
+        
+        const response = await fetch(`${CONFIG.LLM.BASE_URL}/chat/completions`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${CONFIG.LLM.API_KEY}`,
+                'HTTP-Referer': window.location.origin,
+                'X-Title': CONFIG.APP.NAME
+            },
+            body: JSON.stringify({
+                model: CONFIG.LLM.MODEL_ID,
+                messages: messages,
+                max_tokens: 500,
+                temperature: 0.1
+            })
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(`Errore API: ${response.status} - ${errorData.error?.message || 'Errore sconosciuto'}`);
+        }
+        
+        const data = await response.json();
+        
+        if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+            throw new Error('Risposta API non valida');
+        }
+        
+        try {
+            const extracted = JSON.parse(data.choices[0].message.content);
+            return extracted;
+        } catch (parseError) {
+            throw new Error('Impossibile interpretare i dati estratti dalla fattura');
+        }
+    }
+
+    // Converte file in base64
+    fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result.split(',')[1]);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+
     // Verifica stato configurazione
     checkConfiguration() {
         return {

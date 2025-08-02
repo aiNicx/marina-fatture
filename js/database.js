@@ -188,6 +188,9 @@ class DatabaseManager {
                 supplier_id: invoice.supplier_id,
                 amount: parseFloat(invoice.amount),
                 date: invoice.date,
+                status: invoice.status || 'da_pagare',
+                file_path: invoice.file_path || null,
+                file_name: invoice.file_name || null,
                 created_at: new Date().toISOString()
             };
             
@@ -241,6 +244,60 @@ class DatabaseManager {
             return true;
         } catch (error) {
             ConfigUtils.error('Errore eliminazione fattura:', error);
+            throw new Error(CONFIG.MESSAGES.ERROR.DATABASE);
+        }
+    }
+
+    // Cerca fornitore per nome o crea nuovo
+    async findOrCreateSupplier(supplierName) {
+        try {
+            const suppliers = await this.getSuppliers();
+            
+            // Cerca fornitore esistente (case insensitive)
+            const existing = suppliers.find(s => 
+                s.name.toLowerCase().trim() === supplierName.toLowerCase().trim()
+            );
+            
+            if (existing) {
+                return existing.id;
+            }
+            
+            // Crea nuovo fornitore
+            const newSupplier = await this.addSupplier({
+                name: supplierName.trim(),
+                vat: null
+            });
+            
+            return newSupplier.id;
+        } catch (error) {
+            ConfigUtils.error('Errore ricerca/creazione fornitore:', error);
+            throw new Error('Impossibile gestire il fornitore');
+        }
+    }
+
+    // Aggiorna status fattura
+    async updateInvoiceStatus(id, status) {
+        try {
+            if (this.isConnected) {
+                const { error } = await this.supabase
+                    .from('invoices')
+                    .update({ status })
+                    .eq('id', id);
+                
+                if (error) throw error;
+                return true;
+            } else {
+                // Fallback localStorage
+                const invoices = localStorage.getItem('marina_invoices');
+                const parsedInvoices = invoices ? JSON.parse(invoices) : [];
+                const updatedInvoices = parsedInvoices.map(invoice => 
+                    invoice.id === id ? { ...invoice, status } : invoice
+                );
+                localStorage.setItem('marina_invoices', JSON.stringify(updatedInvoices));
+                return true;
+            }
+        } catch (error) {
+            ConfigUtils.error('Errore aggiornamento status:', error);
             throw new Error(CONFIG.MESSAGES.ERROR.DATABASE);
         }
     }

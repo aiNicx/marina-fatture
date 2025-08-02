@@ -4,7 +4,7 @@ const CONFIG = {
     LLM: {
         API_KEY: '', // Verrà caricata dalle variabili d'ambiente
         BASE_URL: 'https://openrouter.ai/api/v1',
-        MODEL_ID: 'qwen/qwen3-30b-a3b:free', // Modello da utilizzare
+        MODEL_ID: 'mistralai/mistral-small-3.2-24b-instruct:free', // Modello con capacità di visione per OCR
         SYSTEM_PROMPT: `Sei un assistente AI specializzato nell'analisi e gestione di fatture e fornitori.
 Aiuti gli utenti a:
 - Analizzare dati finanziari

@@ -121,6 +121,18 @@
                     <label for="invoice-date">Data *</label>
                     <input type="date" id="invoice-date" required>
                 </div>
+                <div class="form-group">
+                    <label for="invoice-status">Status</label>
+                    <select id="invoice-status">
+                        <option value="da_pagare">Da Pagare</option>
+                        <option value="pagata">Pagata</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="invoice-file">Carica Fattura (PDF, PNG, JPG)</label>
+                    <input type="file" id="invoice-file" accept=".pdf,.png,.jpg,.jpeg">
+                    <small style="color: #666; font-size: 0.9em;">Opzionale: i dati verranno estratti automaticamente</small>
+                </div>
                 <div class="form-actions">
                     <button type="button" class="btn-secondary" id="cancel-invoice">Annulla</button>
                     <button type="submit" class="btn-primary">Salva</button>
