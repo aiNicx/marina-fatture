@@ -4,8 +4,8 @@ const CONFIG = {
     LLM: {
         API_KEY: '', // Verrà caricata dalle variabili d'ambiente
         BASE_URL: 'https://openrouter.ai/api/v1',
-        CHAT_MODEL: 'mistralai/mistral-small-3.2-24b-instruct:free', // Chat default
-        OCR_MODEL: 'openai/gpt-4o-mini', // OCR default (serve visione)
+        CHAT_MODEL: 'mistralai/mistral-small-3.1-24b-instruct:free', // Chat default (multimodale!)
+        OCR_MODEL: 'openai/gpt-4o-mini', // OCR default (supporta visione)
         SYSTEM_PROMPT: `Sei un assistente AI specializzato nell'analisi e gestione di fatture e fornitori.
 Aiuti gli utenti a:
 - Analizzare dati finanziari

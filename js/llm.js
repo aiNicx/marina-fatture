@@ -238,6 +238,24 @@ ${paidInvoices.slice(0, 5).map(i =>
         if (!this.isConfigured) {
             throw new Error('LLM non configurato per estrazione dati');
         }
+
+        // Verifica se il modello supporta le immagini
+        const ocrModel = ConfigUtils.getOcrModel();
+        const visionModels = [
+            'openai/gpt-4o',
+            'openai/gpt-4o-mini', 
+            'anthropic/claude-3',
+            'anthropic/claude-3.5-sonnet',
+            'mistralai/pixtral',
+            'mistralai/mistral-small-3.1',
+            'google/gemini-pro-vision',
+            'google/gemini-flash-1.5'
+        ];
+        
+        const supportsVision = visionModels.some(model => ocrModel.includes(model));
+        if (!supportsVision) {
+            throw new Error(`Il modello ${ocrModel} non supporta le immagini. Usa un modello con capacità di visione nelle Impostazioni.`);
+        }
         
         const base64 = await this.fileToBase64(file);
         
@@ -256,7 +274,8 @@ ${paidInvoices.slice(0, 5).map(i =>
                     {
                         type: 'image_url',
                         image_url: {
-                            url: `data:${file.type};base64,${base64}`
+                            url: `data:${file.type};base64,${base64}`,
+                            detail: 'high'
                         }
                     }
                 ]
