@@ -673,10 +673,14 @@ class MarinaFattureApp {
             const file = e.target.files[0];
             if (!file) return;
             
-            // Verifica tipo file
-            const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+            // Verifica tipo file - solo immagini supportate per OCR
+            const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
             if (!validTypes.includes(file.type)) {
-                this.showError('Tipo file non supportato. Usa PNG, JPG o PDF.');
+                if (file.type === 'application/pdf') {
+                    this.showError('❌ PDF non supportato per estrazione automatica.\n💡 Converti il PDF in PNG/JPG e riprova.\n📱 Su phone: screenshot della fattura funziona!');
+                } else {
+                    this.showError('Tipo file non supportato. Usa solo PNG, JPG per estrazione automatica.');
+                }
                 fileInput.value = '';
                 return;
             }

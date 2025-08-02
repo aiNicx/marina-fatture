@@ -120,6 +120,17 @@
                         </div>
                     </div>
                 </div>
+                <div class="settings-section">
+                    <h3>ℹ️ Importante - Formati File</h3>
+                    <div style="background: #fef3c7; border: 1px solid #fde68a; border-radius: 8px; padding: 1rem; color: #92400e;">
+                        <h4 style="margin-top: 0;">Estrazione automatica fatture:</h4>
+                        <ul style="margin: 0.5rem 0;">
+                            <li><strong>✅ Supportati:</strong> PNG, JPG, JPEG</li>
+                            <li><strong>❌ Non supportati:</strong> PDF</li>
+                        </ul>
+                        <p style="margin-bottom: 0;"><strong>💡 Suggerimento:</strong> Converti i PDF in immagini o fai uno screenshot della fattura per usare l'estrazione automatica.</p>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
@@ -180,9 +191,9 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="invoice-file">Carica Fattura (PDF, PNG, JPG)</label>
-                    <input type="file" id="invoice-file" accept=".pdf,.png,.jpg,.jpeg">
-                    <small style="color: #666; font-size: 0.9em;">Opzionale: i dati verranno estratti automaticamente</small>
+                    <label for="invoice-file">Carica Fattura (PNG, JPG)</label>
+                    <input type="file" id="invoice-file" accept=".png,.jpg,.jpeg">
+                    <small style="color: #666; font-size: 0.9em;">Solo immagini - i dati verranno estratti automaticamente</small>
                 </div>
                 <div class="form-actions">
                     <button type="button" class="btn-secondary" id="cancel-invoice">Annulla</button>
