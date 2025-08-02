@@ -2,7 +2,7 @@
 const CONFIG = {
     // Configurazione LLM OpenRouter
     LLM: {
-        API_KEY: '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', // Inserire la propria API key di OpenRouter (opzionale)
+        API_KEY: '', // Verrà caricata dalle variabili d'ambiente
         BASE_URL: 'https://openrouter.ai/api/v1',
         MODEL_ID: 'qwen/qwen3-30b-a3b:free', // Modello da utilizzare
         SYSTEM_PROMPT: `Sei un assistente AI specializzato nell'analisi e gestione di fatture e fornitori.
@@ -70,6 +70,24 @@ Quando possibile, fornisci suggerimenti pratici e actionable.`,
         }
     }
 };
+
+// Carica configurazione dalle variabili d'ambiente
+function loadEnvironmentConfig() {
+    // Per Netlify e altri servizi di hosting, le variabili sono disponibili come window.ENV o process.env
+    if (typeof window !== 'undefined' && window.ENV) {
+        CONFIG.LLM.API_KEY = window.ENV.OPENROUTER_API_KEY || '';
+    } else if (typeof process !== 'undefined' && process.env) {
+        CONFIG.LLM.API_KEY = process.env.OPENROUTER_API_KEY || '';
+    }
+    
+    // Fallback per sviluppo locale - legge da localStorage se disponibile
+    if (!CONFIG.LLM.API_KEY && typeof localStorage !== 'undefined') {
+        CONFIG.LLM.API_KEY = localStorage.getItem('OPENROUTER_API_KEY') || '';
+    }
+}
+
+// Carica la configurazione all'avvio
+loadEnvironmentConfig();
 
 // Funzioni di utilità per la configurazione
 const ConfigUtils = {

@@ -18,7 +18,7 @@
                 <button id="nav-dashboard" class="nav-btn active">Dashboard</button>
                 <button id="nav-suppliers" class="nav-btn">Fornitori</button>
                 <button id="nav-invoices" class="nav-btn">Fatture</button>
-                <button id="nav-reports" class="nav-btn">Report</button>
+                <button id="nav-chat" class="nav-btn">Chat AI</button>
             </nav>
         </div>
     </header>
@@ -58,10 +58,17 @@
             <div id="invoices-list" class="data-list"></div>
         </div>
 
-        <div id="reports-view" class="view">
-            <h2>Report e Analisi</h2>
-            <div id="reports-content">
-                <p>Report e classifiche verranno implementati qui.</p>
+        <div id="chat-view" class="view">
+            <div class="view-header">
+                <h2>Chat AI</h2>
+                <button id="clear-chat-btn" class="btn-secondary">Pulisci Chat</button>
+            </div>
+            <div class="chat-container">
+                <div id="chat-messages" class="chat-messages"></div>
+                <div class="chat-input-container">
+                    <textarea id="chat-input" placeholder="Chiedi qualsiasi cosa sui tuoi dati finanziari..." rows="2"></textarea>
+                    <button id="send-chat-btn" class="btn-primary">Invia</button>
+                </div>
             </div>
         </div>
     </main>
@@ -122,6 +129,8 @@
         </div>
     </div>
 
+    <script src="/.netlify/functions/inject-env"></script>
+    <script src="js/env.js"></script>
     <script src="js/config.js"></script>
     <script src="js/database.js"></script>
     <script src="js/llm.js"></script>

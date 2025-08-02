@@ -1,0 +1,25 @@
+[build]
+  publish = "."
+  command = "echo 'Build completato'"
+
+[build.environment]
+  # Le variabili d'ambiente vengono iniettate qui durante il build
+
+[[plugins]]
+  package = "@netlify/plugin-env-vars"
+
+# Configurazione per le variabili d'ambiente
+[context.production.environment]
+  NODE_ENV = "production"
+
+[context.deploy-preview.environment]
+  NODE_ENV = "development"
+
+# Headers di sicurezza
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"

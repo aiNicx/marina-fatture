@@ -74,6 +74,22 @@ class MarinaFattureApp {
             this.closeModal();
         });
         
+        // Chat controls
+        document.getElementById('send-chat-btn')?.addEventListener('click', () => {
+            this.sendChatMessage();
+        });
+        
+        document.getElementById('clear-chat-btn')?.addEventListener('click', () => {
+            this.clearChat();
+        });
+        
+        document.getElementById('chat-input')?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                this.sendChatMessage();
+            }
+        });
+        
         // Forms
         document.getElementById('supplier-form')?.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -124,8 +140,8 @@ class MarinaFattureApp {
                 case 'invoices':
                     await this.loadInvoices();
                     break;
-                case 'reports':
-                    await this.loadReports();
+                case 'chat':
+                    await this.loadChat();
                     break;
             }
         }
@@ -412,93 +428,115 @@ class MarinaFattureApp {
         }
     }
     
-    // REPORTS
+    // CHAT AI
     
-    async loadReports() {
-        const reportsContainer = document.getElementById('reports-content');
+    async loadChat() {
+        const chatMessages = document.getElementById('chat-messages');
         
         if (!window.llmManager.isConfigured) {
-            reportsContainer.innerHTML = `
-                <div class="empty-state">
-                    <h3>LLM non configurato</h3>
-                    <p>Configura la tua API key di OpenRouter in js/config.js per abilitare i report intelligenti</p>
-                    <p><small>Modello attuale: ${CONFIG.LLM.MODEL_ID}</small></p>
+            chatMessages.innerHTML = `
+                <div class="chat-message system">
+                    <div class="message-content">
+                        <strong>Sistema:</strong> Chat AI non configurata. 
+                        Per utilizzare la chat, configura la variabile d'ambiente OPENROUTER_API_KEY.
+                        <br><small>Modello: ${CONFIG.LLM.MODEL_ID}</small>
+                    </div>
                 </div>
             `;
             return;
         }
         
-        reportsContainer.innerHTML = `
-            <div class="reports-section">
-                <h3>Report Intelligenti</h3>
-                <p>Genera analisi e insights sui tuoi dati finanziari</p>
-                
-                <div class="report-buttons">
-                    <button class="btn-primary" onclick="app.generateReport('financial')">
-                        Analisi Finanziaria
-                    </button>
-                    <button class="btn-primary" onclick="app.generateReport('suppliers')">
-                        Classificazione Fornitori
-                    </button>
-                    <button class="btn-primary" onclick="app.generateReport('trends')">
-                        Trend e Pattern
-                    </button>
-                </div>
-                
-                <div id="report-output" class="report-output"></div>
-            </div>
-        `;
-    }
-    
-    async generateReport(type) {
-        const outputDiv = document.getElementById('report-output');
-        outputDiv.innerHTML = '<p>Generando report...</p>';
-        
-        try {
-            const [suppliers, invoices] = await Promise.all([
-                window.dbManager.getSuppliers(),
-                window.dbManager.getInvoices()
-            ]);
-            
-            let result;
-            switch (type) {
-                case 'financial':
-                    result = await window.llmManager.analyzeFinancials(suppliers, invoices);
-                    break;
-                case 'suppliers':
-                    result = await window.llmManager.classifySuppliers(suppliers, invoices);
-                    break;
-                case 'trends':
-                    result = await window.llmManager.generateReport('custom', { suppliers, invoices }, 
-                        'Analizza i trend temporali e identifica pattern interessanti nei dati');
-                    break;
-            }
-            
-            if (result.success) {
-                outputDiv.innerHTML = `
-                    <div class="report-result">
-                        <h4>Report Generato</h4>
-                        <div class="report-content">${this.formatReportContent(result.message)}</div>
-                    </div>
-                `;
-            } else {
-                outputDiv.innerHTML = `<p class="error">Errore: ${result.error}</p>`;
-            }
-            
-        } catch (error) {
-            outputDiv.innerHTML = `<p class="error">Errore generazione report: ${error.message}</p>`;
+        if (!chatMessages.innerHTML.trim()) {
+            this.addChatMessage('system', 'Ciao! Sono il tuo assistente AI per l\'analisi delle fatture. Puoi chiedermi qualsiasi cosa sui tuoi dati finanziari, fornitori, trend e molto altro!');
         }
     }
     
-    formatReportContent(content) {
-        if (!content) return '<p>Nessun contenuto ricevuto</p>';
+    async sendChatMessage() {
+        const chatInput = document.getElementById('chat-input');
+        const message = chatInput.value.trim();
         
-        // Formatta il contenuto del report per una migliore visualizzazione
-        return content
-            .replace(/\n\n/g, '</p><p>')
+        if (!message) return;
+        
+        if (!window.llmManager.isConfigured) {
+            this.addChatMessage('system', 'Chat non configurata. Imposta la variabile d\'ambiente OPENROUTER_API_KEY.');
+            return;
+        }
+        
+        // Aggiungi messaggio utente
+        this.addChatMessage('user', message);
+        chatInput.value = '';
+        
+        // Mostra indicatore di typing
+        this.addChatMessage('assistant', 'Sto pensando...', true);
+        
+        try {
+            // Carica dati attuali
+            const [suppliers, invoices, stats] = await Promise.all([
+                window.dbManager.getSuppliers(),
+                window.dbManager.getInvoices(),
+                window.dbManager.getStats()
+            ]);
+            
+            // Invia richiesta al LLM
+            const result = await window.llmManager.chatQuery(message, { suppliers, invoices, stats });
+            
+            // Rimuovi indicatore di typing
+            this.removeChatTyping();
+            
+            if (result.success) {
+                this.addChatMessage('assistant', result.message);
+            } else {
+                this.addChatMessage('system', `Errore: ${result.error}`);
+            }
+            
+        } catch (error) {
+            this.removeChatTyping();
+            this.addChatMessage('system', `Errore: ${error.message}`);
+        }
+    }
+    
+    addChatMessage(sender, message, isTyping = false) {
+        const chatMessages = document.getElementById('chat-messages');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `chat-message ${sender}`;
+        if (isTyping) messageDiv.id = 'typing-indicator';
+        
+        const senderNames = {
+            'user': 'Tu',
+            'assistant': 'AI Assistant',
+            'system': 'Sistema'
+        };
+        
+        messageDiv.innerHTML = `
+            <div class="message-content">
+                <strong>${senderNames[sender]}:</strong> ${this.formatChatMessage(message)}
+            </div>
+            <div class="message-time">${new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}</div>
+        `;
+        
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    removeChatTyping() {
+        const typingIndicator = document.getElementById('typing-indicator');
+        if (typingIndicator) {
+            typingIndicator.remove();
+        }
+    }
+    
+    formatChatMessage(message) {
+        return message
             .replace(/\n/g, '<br>')
-            .replace(/^/, '<p>')
-            .replace(/$/, '</p>');
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>');
+    }
+    
+    clearChat() {
+        if (confirm('Vuoi cancellare la cronologia della chat?')) {
+            document.getElementById('chat-messages').innerHTML = '';
+            this.addChatMessage('system', 'Chat cancellata. Ciao! Come posso aiutarti con i tuoi dati finanziari?');
+        }
     }
     
     // UTILITÀ
