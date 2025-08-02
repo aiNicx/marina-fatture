@@ -262,7 +262,7 @@ ${paidInvoices.slice(0, 5).map(i =>
         const messages = [
             {
                 role: 'system',
-                content: 'Estrai ESATTAMENTE questi dati dalla fattura italiana e rispondi SOLO con JSON valido senza altro testo:\n\n{"numero": "numero_fattura", "fornitore": "nome_fornitore", "importo": "importo_totale_solo_numeri", "data": "YYYY-MM-DD"}\n\nSe non trovi un dato, usa stringa vuota "". NON aggiungere testo prima o dopo il JSON.'
+                content: 'Estrai questi dati dalla fattura italiana e rispondi SOLO con JSON:\n\n{"numero": "numero_fattura", "fornitore": "nome_fornitore", "importo": "343.60", "data": "2023-01-17"}\n\nFORMATO RICHIESTO:\n- importo: numeri con punto decimale (es: 343.60)\n- data: YYYY-MM-DD (es: 2023-01-17)\n\nSe non trovi un dato, usa "". NON aggiungere altro testo.'
             },
             {
                 role: 'user',
@@ -334,12 +334,40 @@ ${paidInvoices.slice(0, 5).map(i =>
             
             const extracted = JSON.parse(content);
             
-            // Valida che abbia i campi necessari
+            // Valida e normalizza i campi
+            let importo = extracted.importo || extracted.amount || extracted.total || '';
+            let data = extracted.data || extracted.date || '';
+            
+            // Normalizza importo: aggiunge decimali se mancano
+            if (importo && typeof importo === 'string') {
+                // Rimuovi simboli di valuta
+                importo = importo.replace(/[€$£\s]/g, '');
+                // Se non ha decimali, aggiungili
+                if (!importo.includes('.') && !importo.includes(',')) {
+                    const num = parseFloat(importo);
+                    if (!isNaN(num) && num > 100) {
+                        importo = (num / 100).toFixed(2); // 34360 -> 343.60
+                    }
+                }
+                // Sostituisci virgola con punto per decimali
+                importo = importo.replace(',', '.');
+            }
+            
+            // Normalizza data: converte in formato YYYY-MM-DD
+            if (data && typeof data === 'string') {
+                // Gestisce formato DD/MM/YYYY -> YYYY-MM-DD
+                const dateMatch = data.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+                if (dateMatch) {
+                    const [, day, month, year] = dateMatch;
+                    data = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+                }
+            }
+            
             const result = {
                 numero: extracted.numero || extracted.number || '',
                 fornitore: extracted.fornitore || extracted.supplier || extracted.nome || '',
-                importo: extracted.importo || extracted.amount || extracted.total || '',
-                data: extracted.data || extracted.date || ''
+                importo: importo,
+                data: data
             };
             
             console.log('Dati estratti:', result);

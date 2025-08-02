@@ -695,8 +695,9 @@ class MarinaFattureApp {
             try {
                 // Mostra loading
                 document.body.style.cursor = 'wait';
-                const originalText = document.querySelector('#invoice-modal .btn-primary').textContent;
-                document.querySelector('#invoice-modal .btn-primary').textContent = 'Estraendo dati...';
+                const submitBtn = document.querySelector('#invoice-modal button[type="submit"]');
+                const originalText = submitBtn ? submitBtn.textContent : 'Salva';
+                if (submitBtn) submitBtn.textContent = 'Estraendo dati...';
                 
                 // Estrai dati con LLM
                 const extracted = await window.llmManager.extractInvoiceData(file);
@@ -707,11 +708,8 @@ class MarinaFattureApp {
                 }
                 
                 if (extracted.importo) {
-                    // Rimuovi simboli di valuta e converti
-                    const amount = extracted.importo.toString()
-                        .replace(/[€$£,\s]/g, '')
-                        .replace(/[.,](\d{2})$/, '.$1'); // Gestisce decimali
-                    document.getElementById('invoice-amount').value = amount;
+                    // L'importo è già normalizzato dal LLM manager
+                    document.getElementById('invoice-amount').value = extracted.importo;
                 }
                 
                 if (extracted.data) {
@@ -731,7 +729,8 @@ class MarinaFattureApp {
             } finally {
                 // Rimuovi loading
                 document.body.style.cursor = 'default';
-                document.querySelector('#invoice-modal .btn-primary').textContent = originalText;
+                const submitBtn = document.querySelector('#invoice-modal button[type="submit"]');
+                if (submitBtn) submitBtn.textContent = originalText;
             }
         };
         
