@@ -262,7 +262,7 @@ ${paidInvoices.slice(0, 5).map(i =>
         const messages = [
             {
                 role: 'system',
-                content: 'Estrai SOLO questi dati dalla fattura italiana: numero fattura, nome fornitore, importo totale, data. Rispondi in formato JSON: {"numero": "...", "fornitore": "...", "importo": "...", "data": "YYYY-MM-DD"}. Se non trovi un dato, usa stringa vuota "".'
+                content: 'Estrai ESATTAMENTE questi dati dalla fattura italiana e rispondi SOLO con JSON valido senza altro testo:\n\n{"numero": "numero_fattura", "fornitore": "nome_fornitore", "importo": "importo_totale_solo_numeri", "data": "YYYY-MM-DD"}\n\nSe non trovi un dato, usa stringa vuota "". NON aggiungere testo prima o dopo il JSON.'
             },
             {
                 role: 'user',
@@ -310,10 +310,45 @@ ${paidInvoices.slice(0, 5).map(i =>
         }
         
         try {
-            const extracted = JSON.parse(data.choices[0].message.content);
-            return extracted;
+            let content = data.choices[0].message.content;
+            
+            // Log per debug
+            console.log('Risposta AI:', content);
+            
+            // Prova a estrarre JSON da markdown code blocks
+            let jsonMatch = content.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
+            if (jsonMatch) {
+                content = jsonMatch[1];
+            }
+            
+            // Prova a trovare JSON tra { e }
+            if (!jsonMatch) {
+                jsonMatch = content.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    content = jsonMatch[0];
+                }
+            }
+            
+            // Pulisci il contenuto
+            content = content.trim();
+            
+            const extracted = JSON.parse(content);
+            
+            // Valida che abbia i campi necessari
+            const result = {
+                numero: extracted.numero || extracted.number || '',
+                fornitore: extracted.fornitore || extracted.supplier || extracted.nome || '',
+                importo: extracted.importo || extracted.amount || extracted.total || '',
+                data: extracted.data || extracted.date || ''
+            };
+            
+            console.log('Dati estratti:', result);
+            return result;
+            
         } catch (parseError) {
-            throw new Error('Impossibile interpretare i dati estratti dalla fattura');
+            console.error('Errore parsing JSON:', parseError);
+            console.error('Contenuto ricevuto:', data.choices[0].message.content);
+            throw new Error(`Impossibile interpretare i dati estratti dalla fattura. Contenuto: ${data.choices[0].message.content.substring(0, 200)}...`);
         }
     }
 
