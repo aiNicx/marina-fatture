@@ -19,6 +19,7 @@
                 <button id="nav-suppliers" class="nav-btn">Fornitori</button>
                 <button id="nav-invoices" class="nav-btn">Fatture</button>
                 <button id="nav-chat" class="nav-btn">Chat AI</button>
+                <button id="nav-settings" class="nav-btn">Impostazioni</button>
             </nav>
         </div>
     </header>
@@ -61,20 +62,58 @@
         <div id="chat-view" class="view">
             <div class="view-header">
                 <h2>Chat AI</h2>
-                <div class="chat-controls">
-                    <div class="model-selector">
-                        <label for="model-input">Modello AI:</label>
-                        <input type="text" id="model-input" placeholder="es. openai/gpt-4o-mini" value="">
-                        <button id="save-model-btn" class="btn-small btn-primary">Salva</button>
-                    </div>
-                    <button id="clear-chat-btn" class="btn-secondary">Pulisci Chat</button>
-                </div>
+                <button id="clear-chat-btn" class="btn-secondary">Pulisci Chat</button>
             </div>
             <div class="chat-container">
                 <div id="chat-messages" class="chat-messages"></div>
                 <div class="chat-input-container">
                     <textarea id="chat-input" placeholder="Chiedi qualsiasi cosa sui tuoi dati finanziari..." rows="2"></textarea>
                     <button id="send-chat-btn" class="btn-primary">Invia</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="settings-view" class="view">
+            <div class="view-header">
+                <h2>Impostazioni AI</h2>
+            </div>
+            <div class="settings-container">
+                <div class="settings-section">
+                    <h3>Modelli AI</h3>
+                    <div class="form-group">
+                        <label for="chat-model-input">Modello per Chat:</label>
+                        <input type="text" id="chat-model-input" placeholder="es. mistralai/mistral-small-3.2-24b-instruct:free">
+                        <small>Usato per conversazioni e analisi dati</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="ocr-model-input">Modello per Riconoscimento Fatture:</label>
+                        <input type="text" id="ocr-model-input" placeholder="es. openai/gpt-4o-mini">
+                        <small>Usato per estrarre dati da immagini/PDF (serve capacità visione)</small>
+                    </div>
+                    <div class="form-actions">
+                        <button id="save-settings-btn" class="btn-primary">Salva Impostazioni</button>
+                        <button id="reset-settings-btn" class="btn-secondary">Reset Default</button>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h3>Modelli Consigliati</h3>
+                    <div class="model-suggestions">
+                        <div class="suggestion-card">
+                            <h4>Chat Economica</h4>
+                            <code>mistralai/mistral-small-3.2-24b-instruct:free</code>
+                            <p>Gratuito, buono per chat basic</p>
+                        </div>
+                        <div class="suggestion-card">
+                            <h4>OCR Fatture</h4>
+                            <code>openai/gpt-4o-mini</code>
+                            <p>~$0.001 per fattura, ottimo per riconoscimento</p>
+                        </div>
+                        <div class="suggestion-card">
+                            <h4>Premium</h4>
+                            <code>openai/gpt-4o</code>
+                            <p>Migliore qualità per entrambi</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

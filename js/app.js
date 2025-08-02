@@ -100,6 +100,15 @@ class MarinaFattureApp {
             e.preventDefault();
             this.handleInvoiceSubmit();
         });
+
+        // Settings controls
+        document.getElementById('save-settings-btn')?.addEventListener('click', () => {
+            this.saveSettings();
+        });
+
+        document.getElementById('reset-settings-btn')?.addEventListener('click', () => {
+            this.resetSettings();
+        });
         
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
@@ -142,6 +151,9 @@ class MarinaFattureApp {
                     break;
                 case 'chat':
                     await this.loadChat();
+                    break;
+                case 'settings':
+                    await this.loadSettings();
                     break;
             }
         }
@@ -463,29 +475,6 @@ class MarinaFattureApp {
     
     async loadChat() {
         const chatMessages = document.getElementById('chat-messages');
-        const modelInput = document.getElementById('model-input');
-        const saveModelBtn = document.getElementById('save-model-btn');
-        
-        // Carica modello corrente
-        modelInput.value = ConfigUtils.getCurrentModel();
-        
-        // Gestisci salvataggio modello
-        saveModelBtn.addEventListener('click', () => {
-            const newModel = modelInput.value.trim();
-            if (ConfigUtils.setCurrentModel(newModel)) {
-                this.addChatMessage('system', `✅ Modello aggiornato: ${newModel}`);
-                this.addChatMessage('system', 'Ora questo modello verrà usato per chat E riconoscimento fatture.');
-            } else {
-                this.addChatMessage('system', '❌ Modello non valido. Inserisci un ID modello valido.');
-            }
-        });
-
-        // Salva anche con Enter
-        modelInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                saveModelBtn.click();
-            }
-        });
         
         if (!window.llmManager.isConfigured) {
             chatMessages.innerHTML = `
@@ -493,7 +482,7 @@ class MarinaFattureApp {
                     <div class="message-content">
                         <strong>Sistema:</strong> Chat AI non configurata. 
                         Per utilizzare la chat, configura la variabile d'ambiente OPENROUTER_API_KEY.
-                        <br><small>Modello corrente: ${ConfigUtils.getCurrentModel()}</small>
+                        <br><small>Modello chat: ${ConfigUtils.getChatModel()}</small>
                     </div>
                 </div>
             `;
@@ -501,7 +490,7 @@ class MarinaFattureApp {
         }
         
         if (!chatMessages.innerHTML.trim()) {
-            this.addChatMessage('system', `Ciao! Sono il tuo assistente AI. Modello corrente: <strong>${ConfigUtils.getCurrentModel()}</strong><br>Puoi chiedermi qualsiasi cosa sui tuoi dati finanziari!`);
+            this.addChatMessage('system', `Ciao! Sono il tuo assistente AI.<br>Modello: <code>${ConfigUtils.getChatModel()}</code><br>Puoi chiedermi qualsiasi cosa sui tuoi dati finanziari!`);
         }
     }
     
@@ -618,6 +607,58 @@ class MarinaFattureApp {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    // IMPOSTAZIONI
+
+    async loadSettings() {
+        // Carica modelli correnti
+        document.getElementById('chat-model-input').value = ConfigUtils.getChatModel();
+        document.getElementById('ocr-model-input').value = ConfigUtils.getOcrModel();
+    }
+
+    saveSettings() {
+        const chatModel = document.getElementById('chat-model-input').value.trim();
+        const ocrModel = document.getElementById('ocr-model-input').value.trim();
+
+        let success = true;
+        let messages = [];
+
+        if (chatModel) {
+            if (ConfigUtils.setChatModel(chatModel)) {
+                messages.push(`✅ Modello Chat: ${chatModel}`);
+            } else {
+                success = false;
+                messages.push('❌ Modello Chat non valido');
+            }
+        }
+
+        if (ocrModel) {
+            if (ConfigUtils.setOcrModel(ocrModel)) {
+                messages.push(`✅ Modello OCR: ${ocrModel}`);
+            } else {
+                success = false;
+                messages.push('❌ Modello OCR non valido');
+            }
+        }
+
+        if (success && messages.length > 0) {
+            this.showSuccess('Impostazioni salvate!\n' + messages.join('\n'));
+        } else if (messages.length > 0) {
+            this.showError(messages.join('\n'));
+        } else {
+            this.showError('Inserisci almeno un modello valido');
+        }
+    }
+
+    resetSettings() {
+        if (confirm('Ripristinare i modelli ai valori di default?')) {
+            ConfigUtils.resetModels();
+            this.loadSettings();
+            this.showSuccess('Modelli ripristinati ai default:\n' + 
+                `Chat: ${CONFIG.LLM.CHAT_MODEL}\n` +
+                `OCR: ${CONFIG.LLM.OCR_MODEL}`);
+        }
     }
 
     // Configura gestione upload file per estrazione automatica

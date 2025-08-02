@@ -4,8 +4,8 @@ const CONFIG = {
     LLM: {
         API_KEY: '', // Verrà caricata dalle variabili d'ambiente
         BASE_URL: 'https://openrouter.ai/api/v1',
-        MODEL_ID: 'mistralai/mistral-small-3.2-24b-instruct:free', // Modello default
-        // Il modello verrà sovrascritto dinamicamente dall'app
+        CHAT_MODEL: 'mistralai/mistral-small-3.2-24b-instruct:free', // Chat default
+        OCR_MODEL: 'openai/gpt-4o-mini', // OCR default (serve visione)
         SYSTEM_PROMPT: `Sei un assistente AI specializzato nell'analisi e gestione di fatture e fornitori.
 Aiuti gli utenti a:
 - Analizzare dati finanziari
@@ -181,22 +181,37 @@ const ConfigUtils = {
         console.error('[ERROR]', ...args);
     },
 
-    // Gestione modello dinamico
-    getCurrentModel() {
-        return localStorage.getItem('CURRENT_AI_MODEL') || CONFIG.LLM.MODEL_ID;
+    // Gestione modelli separati
+    getChatModel() {
+        return localStorage.getItem('CHAT_MODEL') || CONFIG.LLM.CHAT_MODEL;
     },
 
-    setCurrentModel(modelId) {
+    getOcrModel() {
+        return localStorage.getItem('OCR_MODEL') || CONFIG.LLM.OCR_MODEL;
+    },
+
+    setChatModel(modelId) {
         if (modelId && modelId.trim()) {
-            localStorage.setItem('CURRENT_AI_MODEL', modelId.trim());
-            console.log('Modello AI aggiornato:', modelId);
+            localStorage.setItem('CHAT_MODEL', modelId.trim());
+            console.log('Modello Chat aggiornato:', modelId);
             return true;
         }
         return false;
     },
 
-    clearCurrentModel() {
-        localStorage.removeItem('CURRENT_AI_MODEL');
+    setOcrModel(modelId) {
+        if (modelId && modelId.trim()) {
+            localStorage.setItem('OCR_MODEL', modelId.trim());
+            console.log('Modello OCR aggiornato:', modelId);
+            return true;
+        }
+        return false;
+    },
+
+    resetModels() {
+        localStorage.removeItem('CHAT_MODEL');
+        localStorage.removeItem('OCR_MODEL');
+        console.log('Modelli ripristinati ai default');
     }
 };
 

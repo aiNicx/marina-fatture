@@ -145,7 +145,7 @@ ${context.invoices.slice(0, 10).map(i =>
                     'X-Title': CONFIG.APP.NAME
                 },
                 body: JSON.stringify({
-                    model: ConfigUtils.getCurrentModel(), // Usa sempre modello corrente
+                    model: ConfigUtils.getChatModel(), // Usa modello Chat
                     messages: messages,
                     max_tokens: CONFIG.LLM.MAX_TOKENS,
                     temperature: CONFIG.LLM.TEMPERATURE
@@ -272,7 +272,7 @@ ${paidInvoices.slice(0, 5).map(i =>
                 'X-Title': CONFIG.APP.NAME
             },
             body: JSON.stringify({
-                model: ConfigUtils.getCurrentModel(), // Usa modello corrente
+                model: ConfigUtils.getOcrModel(), // Usa modello OCR
                 messages: messages,
                 max_tokens: 500,
                 temperature: 0.1
