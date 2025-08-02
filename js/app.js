@@ -463,6 +463,29 @@ class MarinaFattureApp {
     
     async loadChat() {
         const chatMessages = document.getElementById('chat-messages');
+        const modelInput = document.getElementById('model-input');
+        const saveModelBtn = document.getElementById('save-model-btn');
+        
+        // Carica modello corrente
+        modelInput.value = ConfigUtils.getCurrentModel();
+        
+        // Gestisci salvataggio modello
+        saveModelBtn.addEventListener('click', () => {
+            const newModel = modelInput.value.trim();
+            if (ConfigUtils.setCurrentModel(newModel)) {
+                this.addChatMessage('system', `✅ Modello aggiornato: ${newModel}`);
+                this.addChatMessage('system', 'Ora questo modello verrà usato per chat E riconoscimento fatture.');
+            } else {
+                this.addChatMessage('system', '❌ Modello non valido. Inserisci un ID modello valido.');
+            }
+        });
+
+        // Salva anche con Enter
+        modelInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                saveModelBtn.click();
+            }
+        });
         
         if (!window.llmManager.isConfigured) {
             chatMessages.innerHTML = `
@@ -470,7 +493,7 @@ class MarinaFattureApp {
                     <div class="message-content">
                         <strong>Sistema:</strong> Chat AI non configurata. 
                         Per utilizzare la chat, configura la variabile d'ambiente OPENROUTER_API_KEY.
-                        <br><small>Modello: ${CONFIG.LLM.MODEL_ID}</small>
+                        <br><small>Modello corrente: ${ConfigUtils.getCurrentModel()}</small>
                     </div>
                 </div>
             `;
@@ -478,7 +501,7 @@ class MarinaFattureApp {
         }
         
         if (!chatMessages.innerHTML.trim()) {
-            this.addChatMessage('system', 'Ciao! Sono il tuo assistente AI per l\'analisi delle fatture. Puoi chiedermi qualsiasi cosa sui tuoi dati finanziari, fornitori, trend e molto altro!');
+            this.addChatMessage('system', `Ciao! Sono il tuo assistente AI. Modello corrente: <strong>${ConfigUtils.getCurrentModel()}</strong><br>Puoi chiedermi qualsiasi cosa sui tuoi dati finanziari!`);
         }
     }
     
@@ -508,7 +531,7 @@ class MarinaFattureApp {
                 window.dbManager.getStats()
             ]);
             
-            // Invia richiesta al LLM
+            // Usa modello corrente impostato globalmente
             const result = await window.llmManager.chatQuery(message, { suppliers, invoices, stats });
             
             // Rimuovi indicatore di typing

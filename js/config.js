@@ -4,7 +4,8 @@ const CONFIG = {
     LLM: {
         API_KEY: '', // Verrà caricata dalle variabili d'ambiente
         BASE_URL: 'https://openrouter.ai/api/v1',
-        MODEL_ID: 'mistralai/mistral-small-3.2-24b-instruct:free', // Modello con capacità di visione per OCR
+        MODEL_ID: 'mistralai/mistral-small-3.2-24b-instruct:free', // Modello default
+        // Il modello verrà sovrascritto dinamicamente dall'app
         SYSTEM_PROMPT: `Sei un assistente AI specializzato nell'analisi e gestione di fatture e fornitori.
 Aiuti gli utenti a:
 - Analizzare dati finanziari
@@ -178,6 +179,24 @@ const ConfigUtils = {
     // Log di errore
     error(...args) {
         console.error('[ERROR]', ...args);
+    },
+
+    // Gestione modello dinamico
+    getCurrentModel() {
+        return localStorage.getItem('CURRENT_AI_MODEL') || CONFIG.LLM.MODEL_ID;
+    },
+
+    setCurrentModel(modelId) {
+        if (modelId && modelId.trim()) {
+            localStorage.setItem('CURRENT_AI_MODEL', modelId.trim());
+            console.log('Modello AI aggiornato:', modelId);
+            return true;
+        }
+        return false;
+    },
+
+    clearCurrentModel() {
+        localStorage.removeItem('CURRENT_AI_MODEL');
     }
 };
 

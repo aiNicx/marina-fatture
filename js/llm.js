@@ -145,7 +145,7 @@ ${context.invoices.slice(0, 10).map(i =>
                     'X-Title': CONFIG.APP.NAME
                 },
                 body: JSON.stringify({
-                    model: CONFIG.LLM.MODEL_ID,
+                    model: ConfigUtils.getCurrentModel(), // Usa sempre modello corrente
                     messages: messages,
                     max_tokens: CONFIG.LLM.MAX_TOKENS,
                     temperature: CONFIG.LLM.TEMPERATURE
@@ -212,13 +212,23 @@ ${context.suppliers.slice(0, 20).map(s =>
         }
         
         if (context.invoices && context.invoices.length > 0) {
-            contextParts.push(`FATTURE RECENTI (${context.invoices.length} totali, ultime 15):
-${context.invoices.slice(0, 15).map(i => 
-    `- ${i.number}: ${ConfigUtils.formatCurrency(i.amount)} - ${i.supplier?.name || 'N/A'} (${ConfigUtils.formatDate(i.date)})`
+            const unpaidInvoices = context.invoices.filter(i => i.status === 'da_pagare');
+            const paidInvoices = context.invoices.filter(i => i.status === 'pagata');
+            
+            contextParts.push(`FATTURE (${context.invoices.length} totali - ${unpaidInvoices.length} da pagare, ${paidInvoices.length} pagate):
+
+FATTURE DA PAGARE (${unpaidInvoices.length}):
+${unpaidInvoices.slice(0, 10).map(i => 
+    `- ${i.number}: ${ConfigUtils.formatCurrency(i.amount)} - ${i.supplier?.name || 'N/A'} (${ConfigUtils.formatDate(i.date)}) [DA PAGARE]`
+).join('\n')}
+
+FATTURE PAGATE RECENTI (${paidInvoices.length} totali, ultime 5):
+${paidInvoices.slice(0, 5).map(i => 
+    `- ${i.number}: ${ConfigUtils.formatCurrency(i.amount)} - ${i.supplier?.name || 'N/A'} (${ConfigUtils.formatDate(i.date)}) [PAGATA]`
 ).join('\n')}`);
         }
         
-        contextParts.push('\nRispondi sempre in italiano, in modo chiaro e professionale. Puoi usare i dati forniti per rispondere a domande specifiche sui fornitori, fatture, trend, analisi finanziarie e suggerimenti.');
+        contextParts.push('\nRispondi sempre in italiano, in modo chiaro e professionale. Le fatture hanno due status: "da_pagare" e "pagata". Quando l\'utente chiede fatture da pagare, mostra SOLO quelle con status "da_pagare". Puoi rispondere a domande sui fornitori, fatture, trend e analisi finanziarie.');
         
         return contextParts.join('\n\n');
     }
@@ -262,7 +272,7 @@ ${context.invoices.slice(0, 15).map(i =>
                 'X-Title': CONFIG.APP.NAME
             },
             body: JSON.stringify({
-                model: CONFIG.LLM.MODEL_ID,
+                model: ConfigUtils.getCurrentModel(), // Usa modello corrente
                 messages: messages,
                 max_tokens: 500,
                 temperature: 0.1

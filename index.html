@@ -61,7 +61,14 @@
         <div id="chat-view" class="view">
             <div class="view-header">
                 <h2>Chat AI</h2>
-                <button id="clear-chat-btn" class="btn-secondary">Pulisci Chat</button>
+                <div class="chat-controls">
+                    <div class="model-selector">
+                        <label for="model-input">Modello AI:</label>
+                        <input type="text" id="model-input" placeholder="es. openai/gpt-4o-mini" value="">
+                        <button id="save-model-btn" class="btn-small btn-primary">Salva</button>
+                    </div>
+                    <button id="clear-chat-btn" class="btn-secondary">Pulisci Chat</button>
+                </div>
             </div>
             <div class="chat-container">
                 <div id="chat-messages" class="chat-messages"></div>

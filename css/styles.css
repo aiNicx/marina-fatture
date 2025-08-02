@@ -42,6 +42,43 @@ body {
     border: 1px solid #fde68a;
 }
 
+/* Chat controls */
+.chat-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.model-selector {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.model-selector label {
+    font-weight: 500;
+    color: #374151;
+}
+
+.model-selector input {
+    padding: 6px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: white;
+    font-size: 0.9rem;
+    color: #374151;
+    min-width: 250px;
+    font-family: monospace;
+}
+
+.model-selector input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
 /* Header */
 header {
     background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
