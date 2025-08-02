@@ -1,172 +1,36 @@
 # Schema Tecnico - Marina Fatture
 
-## Architettura Applicazione
+## Architettura
 
-### Pattern Architetturale
-L'applicazione segue un pattern **MVC semplificato** con separazione chiara delle responsabilità:
+### Pattern MVC Semplificato
+- **Model**: `database.js` - Gestione dati
+- **View**: `index.html` + `styles.css` - UI
+- **Controller**: `app.js` - Logica applicazione
 
-- **Model**: `database.js` - Gestione dati e business logic
-- **View**: `index.html` + `styles.css` - Presentazione e UI
-- **Controller**: `app.js` - Logica applicazione e coordinamento
-
-### Diagramma Architettura
-
+### Diagramma Componenti
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   index.html    │    │   styles.css    │    │    app.js       │
-│   (Structure)   │◄──►│   (Styling)     │◄──►│  (Controller)   │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-                                                        │
-                       ┌─────────────────┐    ┌─────────────────┐
-                       │   database.js   │◄──►│   config.js     │
-                       │   (Data Layer)  │    │ (Configuration) │
-                       └─────────────────┘    └─────────────────┘
-                                │                       │
-                       ┌─────────────────┐    ┌─────────────────┐
-                       │    Supabase     │    │   llm.js        │
-                       │   (Database)    │    │ (AI Integration)│
-                       └─────────────────┘    └─────────────────┘
-                                                        │
-                                                ┌─────────────────┐
-                                                │   OpenRouter    │
-                                                │   (LLM API)     │
-                                                └─────────────────┘
-```
-
-## Dettagli Tecnici
-
-### Gestione Stato (app.js)
-
-```javascript
-class MarinaFattureApp {
-    constructor() {
-        this.currentView = 'dashboard';     // Vista corrente
-        this.currentModal = null;           // Modal aperto
-        this.currentEditId = null;          // ID elemento in editing
-    }
-    
-    // Metodi principali:
-    // - switchView(viewName): Cambio vista SPA
-    // - loadDashboard(): Caricamento statistiche
-    // - loadSuppliers(): Gestione fornitori
-    // - loadInvoices(): Gestione fatture
-    // - loadReports(): Generazione report AI
-}
-```
-
-### Data Layer (database.js)
-
-#### Dual Storage Strategy
-```javascript
-class DatabaseManager {
-    // Strategia ibrida: Supabase come primario, localStorage come fallback
-    
-    async getSuppliers() {
-        if (this.isConnected) {
-            // Supabase query
-            return await this.supabase.from('suppliers').select('*');
-        } else {
-            // LocalStorage fallback
-            return JSON.parse(localStorage.getItem('marina_suppliers') || '[]');
-        }
-    }
-}
-```
-
-#### Query Patterns
-```sql
--- Suppliers with invoices count
-SELECT s.*, COUNT(i.id) as invoice_count 
-FROM suppliers s 
-LEFT JOIN invoices i ON s.id = i.supplier_id 
-GROUP BY s.id;
-
--- Monthly spending analysis
-SELECT 
-    DATE_TRUNC('month', date) as month,
-    SUM(amount) as total_amount,
-    COUNT(*) as invoice_count
-FROM invoices 
-GROUP BY month 
-ORDER BY month DESC;
-```
-
-### Configuration Management (config.js)
-
-#### Struttura Configurazione
-```javascript
-const CONFIG = {
-    LLM: {
-        API_KEY: '',                    // OpenRouter API key
-        MODEL_ID: 'openai/gpt-3.5-turbo',
-        SYSTEM_PROMPT: '...',          // Specialized financial AI prompt
-        MAX_TOKENS: 1000,
-        TEMPERATURE: 0.7
-    },
-    DATABASE: {
-        URL: '',                       // Supabase project URL
-        ANON_KEY: '',                  // Supabase anon key
-        SERVICE_ROLE_KEY: ''           // Admin operations
-    },
-    APP: {
-        DEBUG: false,                  // Development mode
-        VAT_REGEX: /^IT[0-9]{11}$/,   // Italian VAT validation
-        CURRENCY: 'EUR',
-        LOCALE: 'it-IT'
-    }
-};
-```
-
-### LLM Integration (llm.js)
-
-#### OpenRouter API Communication
-```javascript
-class LLMManager {
-    async query(userMessage, context = {}) {
-        const response = await fetch(`${CONFIG.LLM.BASE_URL}/chat/completions`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${CONFIG.LLM.API_KEY}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                model: CONFIG.LLM.MODEL_ID,
-                messages: [
-                    { role: 'system', content: CONFIG.LLM.SYSTEM_PROMPT },
-                    { role: 'user', content: userMessage }
-                ]
-            })
-        });
-    }
-}
-```
-
-#### Context Building
-```javascript
-buildContextMessage(context) {
-    // Costruisce contesto strutturato per LLM:
-    // - Statistiche attuali
-    // - Lista fornitori recenti
-    // - Fatture recenti
-    // - Metadati utili per analisi
-}
+index.html ←→ styles.css ←→ app.js
+                              ↓
+config.js ←→ database.js ←→ llm.js
+    ↓           ↓           ↓
+Supabase   localStorage  OpenRouter
 ```
 
 ## API Documentation
 
-### Database API (DatabaseManager)
+### DatabaseManager
 
 #### Suppliers
 ```javascript
-// GET - Ottieni tutti i fornitori
+// GET - Ottieni fornitori
 await dbManager.getSuppliers()
-// Returns: Array<{id, name, vat, created_at, updated_at}>
+// Returns: Array<{id, name, vat, created_at}>
 
 // POST - Aggiungi fornitore
 await dbManager.addSupplier({name, vat})
 // Returns: {id, name, vat, created_at}
 
-// PUT - Aggiorna fornitore  
+// PUT - Aggiorna fornitore
 await dbManager.updateSupplier(id, {name, vat})
 // Returns: {id, name, vat, updated_at}
 
@@ -177,7 +41,7 @@ await dbManager.deleteSupplier(id)
 
 #### Invoices
 ```javascript
-// GET - Ottieni tutte le fatture con fornitori
+// GET - Ottieni fatture con fornitori
 await dbManager.getInvoices()
 // Returns: Array<{id, number, amount, date, supplier: {id, name}}>
 
@@ -188,77 +52,114 @@ await dbManager.addInvoice({number, supplier_id, amount, date})
 // DELETE - Elimina fattura
 await dbManager.deleteInvoice(id)
 // Returns: boolean
-```
 
-#### Statistics
-```javascript
-// GET - Statistiche aggregate
+// GET - Statistiche
 await dbManager.getStats()
 // Returns: {totalSuppliers, totalInvoices, totalAmount}
 ```
 
-### LLM API (LLMManager)
+### LLMManager
 
 ```javascript
-// Analisi finanziaria generale
-await llmManager.analyzeFinancials(suppliers, invoices)
+// Chat query
+await llmManager.chatQuery(message, context)
+// Returns: {success: boolean, message: string, error?: string}
 
-// Classificazione fornitori
-await llmManager.classifySuppliers(suppliers, invoices)
-
-// Report personalizzato
-await llmManager.generateReport(type, data, customPrompt)
-
-// Query libera con contesto
-await llmManager.query(message, context)
+// Verifica configurazione
+llmManager.checkConfiguration()
+// Returns: {isConfigured, apiKey, model, baseUrl}
 ```
 
-## Validazione Dati
+## Configurazione
 
-### Client-side Validation
-
+### CONFIG Object
 ```javascript
-// Validazione P.IVA italiana
+const CONFIG = {
+    LLM: {
+        API_KEY: '',                    // OpenRouter API key
+        MODEL_ID: 'qwen/qwen3-30b-a3b:free',
+        SYSTEM_PROMPT: '...',          // Prompt specializzato
+        MAX_TOKENS: 1000,
+        TEMPERATURE: 0.7
+    },
+    DATABASE: {
+        URL: '',                       // Supabase project URL
+        ANON_KEY: '',                  // Supabase anon key
+    },
+    APP: {
+        DEBUG: false,
+        VAT_REGEX: /^IT[0-9]{11}$/,   // P.IVA italiana
+        LOCALE: 'it-IT',
+        CURRENCY: 'EUR'
+    }
+};
+```
+
+## Dual Storage Strategy
+
+### Supabase (Primario)
+```javascript
+if (this.isConnected) {
+    // Query Supabase
+    const { data, error } = await this.supabase
+        .from('suppliers')
+        .select('*');
+    return data;
+}
+```
+
+### localStorage (Fallback)
+```javascript
+else {
+    // Fallback localStorage
+    const suppliers = localStorage.getItem('marina_suppliers');
+    return suppliers ? JSON.parse(suppliers) : [];
+}
+```
+
+## Validazione
+
+### Client-side
+```javascript
+// P.IVA italiana
 validateVAT(vat) {
     return /^IT[0-9]{11}$/.test(vat.toUpperCase());
 }
 
-// Validazione numero fattura
+// Numero fattura
 validateInvoiceNumber(number) {
     return /^[A-Za-z0-9\-\/]+$/.test(number);
 }
 
-// Validazione importo
+// Importo positivo
 validateAmount(amount) {
     return !isNaN(amount) && parseFloat(amount) > 0;
 }
 ```
 
-### Server-side Validation (Supabase)
-
+### Database Constraints
 ```sql
--- Constraint P.IVA
+-- P.IVA format
 ALTER TABLE suppliers ADD CONSTRAINT valid_vat 
 CHECK (vat IS NULL OR vat ~ '^IT[0-9]{11}$');
 
--- Constraint importo positivo
+-- Importo positivo
 ALTER TABLE invoices ADD CONSTRAINT positive_amount 
 CHECK (amount > 0);
 
--- Unique numero fattura per fornitore
+-- Numero fattura unique per fornitore
 ALTER TABLE invoices ADD CONSTRAINT unique_invoice_per_supplier 
 UNIQUE (supplier_id, number);
 ```
 
 ## Error Handling
 
-### Error Types e Gestione
-
+### Tipi di Errore
 ```javascript
 // Errori di rete
 catch (error) {
     if (error.name === 'TypeError' && error.message.includes('fetch')) {
-        throw new Error(CONFIG.MESSAGES.ERROR.NETWORK);
+        throw new Error('Errore di connessione');
     }
 }
 
@@ -267,47 +168,35 @@ if (!ConfigUtils.validateVAT(vat)) {
     throw new Error('P.IVA non valida');
 }
 
-// Errori database
+// Errori database Supabase
 if (error.code === 'PGRST116') {
-    throw new Error(CONFIG.MESSAGES.ERROR.NOT_FOUND);
+    throw new Error('Elemento non trovato');
 }
 ```
 
-### Logging Strategy
-
+### Logging
 ```javascript
 // Debug logs (solo in development)
 ConfigUtils.debug('Loading suppliers...', suppliers);
 
 // Error logs (sempre attivi)
 ConfigUtils.error('Database error:', error);
-
-// User feedback
-this.showError(error.message);
-this.showSuccess(CONFIG.MESSAGES.SUCCESS.SAVE);
 ```
 
-## Performance Considerations
+## Performance
 
-### Lazy Loading
-- Dati caricati solo quando necessari per la vista corrente
-- Statistiche dashboard aggiornate solo al cambio vista
+### Ottimizzazioni
+- **Lazy Loading**: Dati caricati solo quando necessari
+- **Local Cache**: localStorage come cache
+- **Bundle Size**: < 100KB JavaScript totale
+- **CSS nativo**: Grid/Flexbox senza framework
 
-### Caching Strategy
-```javascript
-// LocalStorage come cache
-const cachedSuppliers = localStorage.getItem('marina_suppliers');
-if (cachedSuppliers && Date.now() - lastUpdate < CACHE_DURATION) {
-    return JSON.parse(cachedSuppliers);
-}
-```
+### Browser Compatibility
+- **Target**: Chrome 70+, Firefox 65+, Safari 12+, Edge 79+
+- **Features**: ES6+, Fetch API, CSS Grid/Flexbox
+- **Progressive Enhancement**: Fallback per localStorage
 
-### Bundle Optimization
-- **No frameworks**: Solo vanilla JS
-- **CSS nativo**: Grid/Flexbox senza librerie
-- **Lazy imports**: Script caricati in ordine ottimale
-
-## Security Measures
+## Sicurezza
 
 ### XSS Prevention
 ```javascript
@@ -326,32 +215,8 @@ vat: supplier.vat ? supplier.vat.trim().toUpperCase() : null
 ```
 
 ### API Security
-- **API Keys**: Non committate in repository
-- **CORS**: Configurazione restrittiva
-- **Rate Limiting**: Gestito da OpenRouter/Supabase
+- API Keys come variabili d'ambiente
+- CORS configurazione restrittiva
+- HTTPS only in produzione
 
-## Browser Compatibility
-
-### Supported Features
-- **ES6+**: Classes, arrow functions, async/await
-- **CSS Grid/Flexbox**: Layout responsivo
-- **Fetch API**: Chiamate HTTP native
-- **LocalStorage**: Fallback persistence
-
-### Target Browsers
-- Chrome 70+
-- Firefox 65+  
-- Safari 12+
-- Edge 79+
-
-### Progressive Enhancement
-```javascript
-// Feature detection
-if ('localStorage' in window) {
-    // Use localStorage
-} else {
-    // Fallback to session storage or memory
-}
-```
-
-Questo schema tecnico fornisce una reference completa per sviluppatori che devono mantenere o estendere l'applicazione.
+Questo schema fornisce una reference completa per sviluppatori che mantengono o estendono l'applicazione.

@@ -1,62 +1,31 @@
 # Piano di Sviluppo - Marina Fatture
 
-## Overview del Progetto
+## Architettura
 
-**Marina Fatture** è un'applicazione web semplice e manutenibile per la gestione di fornitori e fatture, sviluppata con tecnologie web standard (HTML, CSS, JavaScript) e predisposta per l'integrazione con AI e database cloud.
-
-## Obiettivi
-
-- ✅ **Semplicità**: Codice pulito, organizzato e facilmente manutenibile
-- ✅ **Responsività**: Interfaccia user-friendly su tutti i dispositivi
-- ✅ **Modularità**: Architettura componibile per future estensioni
-- ✅ **Cloud-ready**: Predisposta per deploy su Netlify con database remoto
-- ✅ **AI-enhanced**: Integrazione LLM per analisi e report intelligenti
-
-## Architettura del Sistema
-
-### Struttura dei File
-
+### Struttura Files
 ```
 marina-fatture/
-├── index.html              # Pagina principale SPA
-├── css/
-│   └── styles.css          # Stili responsivi e componenti UI
+├── index.html              # SPA principale
+├── css/styles.css          # Stili responsivi
 ├── js/
-│   ├── config.js           # Configurazione globale (API keys, settings)
-│   ├── database.js         # Gestione dati (Supabase + localStorage fallback)
-│   ├── llm.js             # Integrazione OpenRouter LLM
-│   └── app.js             # Logica applicazione principale
-└── docs/
-    ├── PIANO_SVILUPPO.md   # Questo documento
-    ├── SCHEMA_TECNICO.md   # Dettagli tecnici e API
-    └── DATABASE_SETUP.md   # Guida setup database
+│   ├── config.js           # Configurazione globale
+│   ├── database.js         # Gestione dati (Supabase + localStorage)
+│   ├── llm.js             # Integrazione OpenRouter
+│   ├── env.js             # Gestione variabili d'ambiente
+│   └── app.js             # Logica applicazione
+├── netlify/functions/      # Funzioni serverless
+└── docs/                   # Documentazione
 ```
 
-### Tecnologie Utilizzate
-
+### Tecnologie
 - **Frontend**: HTML5, CSS3, JavaScript ES6+
-- **Database**: Supabase (PostgreSQL) con fallback localStorage
-- **AI/LLM**: OpenRouter API per analisi intelligenti
-- **Deploy**: Netlify per hosting statico
-- **Styling**: CSS nativo con Grid/Flexbox, design responsive
-
-## Funzionalità Implementate
-
-### Core Features
-- ✅ **Dashboard**: Statistiche in tempo reale (fornitori, fatture, importi)
-- ✅ **Gestione Fornitori**: CRUD completo con validazione P.IVA
-- ✅ **Gestione Fatture**: Associazione fornitori, validazione dati
-- ✅ **Interfaccia Responsiva**: Mobile-first design
-
-### Features Avanzate
-- ✅ **Modulo LLM**: Integrazione OpenRouter per report AI
-- ✅ **Doppio Storage**: Supabase cloud + localStorage fallback
-- ✅ **Validazione Avanzata**: P.IVA italiana, numeri fattura
-- ✅ **Configurazione Modulare**: File config centralizzato
+- **Database**: Supabase (PostgreSQL) + localStorage fallback
+- **AI**: OpenRouter API
+- **Deploy**: Netlify
 
 ## Modello Dati
 
-### Tabella `suppliers` (Fornitori)
+### Suppliers (Fornitori)
 ```sql
 - id: TEXT PRIMARY KEY
 - name: TEXT NOT NULL
@@ -65,126 +34,109 @@ marina-fatture/
 - updated_at: TIMESTAMP
 ```
 
-### Tabella `invoices` (Fatture)
+### Invoices (Fatture)
 ```sql
 - id: TEXT PRIMARY KEY
-- number: TEXT NOT NULL (numero fattura)
+- number: TEXT NOT NULL
 - supplier_id: TEXT REFERENCES suppliers(id)
-- amount: DECIMAL(10,2) NOT NULL
-- date: DATE NOT NULL
+- amount: DECIMAL(10,2)
+- date: DATE
 - created_at: TIMESTAMP
 ```
+
+## Funzionalità
+
+### ✅ Implementate
+- Dashboard con statistiche
+- CRUD fornitori e fatture
+- Validazione P.IVA italiana
+- Chat AI con OpenRouter
+- Design responsivo
+- Dual storage (Supabase + localStorage)
+
+### 🔄 Roadmap
+
+#### Fase 2 - UX Enhancement
+- [ ] Toast notifications invece di alert()
+- [ ] Filtri e ricerca
+- [ ] Ordinamento tabelle
+- [ ] Dark mode
+
+#### Fase 3 - Features Avanzate
+- [ ] Export CSV/PDF
+- [ ] Import fatture da file
+- [ ] Grafici e visualizzazioni
+- [ ] Gestione categorie spese
+
+#### Fase 4 - AI Enhancement
+- [ ] OCR per estrazione dati da PDF
+- [ ] Classificazione automatica spese
+- [ ] Previsioni trend
+- [ ] Suggerimenti ottimizzazione
 
 ## Configurazione LLM
 
 ### OpenRouter Integration
 - **API**: https://openrouter.ai/api/v1
-- **Modello Default**: `openai/gpt-3.5-turbo`
+- **Modello Default**: `qwen/qwen3-30b-a3b:free`
 - **System Prompt**: Specializzato per analisi finanziarie
 
 ### Funzionalità AI
-- **Analisi Finanziaria**: Trend spese, anomalie, insights
-- **Classificazione Fornitori**: Categorizzazione automatica
-- **Report Personalizzati**: Analisi su richiesta dell'utente
+- Analisi trend spese
+- Classificazione fornitori
+- Report personalizzati
+- Insights su anomalie
 
-## Roadmap di Sviluppo
+## Deploy
 
-### Fase 1: MVP ✅ (Completata)
-- [x] Struttura base applicazione
-- [x] CRUD fornitori e fatture
-- [x] Dashboard con statistiche
-- [x] Responsive design
-- [x] Configurazione database e LLM
+### Netlify (Consigliato)
+1. Push su GitHub
+2. Connetti repository su Netlify
+3. Deploy automatico
+4. Configura variabile `OPENROUTER_API_KEY`
 
-### Fase 2: Miglioramenti UI/UX
-- [ ] Toast notifications invece di alert()
-- [ ] Filtri e ricerca avanzata
-- [ ] Ordinamento tabelle
-- [ ] Paginazione per grandi dataset
-- [ ] Dark mode toggle
+### Configurazione
+- **Build command**: vuoto
+- **Publish directory**: `.`
+- **Functions directory**: `netlify/functions`
 
-### Fase 3: Features Avanzate
-- [ ] Export dati (CSV, PDF)
-- [ ] Import fatture da file
-- [ ] Grafici e visualizzazioni
-- [ ] Backup automatico dati
-- [ ] Gestione categorie spese
+## Sicurezza
 
-### Fase 4: AI Enhancement
-- [ ] Estrazione dati da PDF fatture
-- [ ] Classificazione automatica spese
-- [ ] Previsioni trend future
-- [ ] Ottimizzazione suggerita fornitori
+### Client-side
+- Validazione input con regex
+- Escape HTML per prevenire XSS
+- Sanitizzazione dati
 
-## Deploy e Configurazione
+### API Keys
+- Variabili d'ambiente per production
+- localStorage solo per sviluppo locale
+- Non committate in repository
 
-### Setup Iniziale
-1. **Clone repository** su macchina locale
-2. **Configura Supabase** (vedi DATABASE_SETUP.md)
-3. **Configura OpenRouter** API key in config.js
-4. **Deploy su Netlify** (drag & drop cartella progetto)
+## Performance
 
-### Configurazione Files
-- **`js/config.js`**: Inserire API keys e URL database
-- **Supabase**: Configurare tabelle e RLS policies
-- **Netlify**: Configurare redirects per SPA se necessario
-
-## Manutenibilità e Best Practices
-
-### Principi di Design
-- **Separation of Concerns**: Ogni file ha responsabilità specifiche
-- **Progressive Enhancement**: Fallback localStorage se database offline
-- **Error Handling**: Gestione robusta degli errori
-- **Responsive First**: Design mobile-first
-
-### Convenzioni Codice
-- **ES6+ Features**: Arrow functions, async/await, destructuring
-- **Naming**: CamelCase per variabili, kebab-case per CSS
-- **Comments**: Documentazione inline per logica complessa
-- **Modularità**: Classi e funzioni riutilizabili
-
-### Sicurezza
-- **Input Validation**: Sanitizzazione e validazione lato client
-- **XSS Prevention**: Escape HTML nei template
-- **API Keys**: Non committare chiavi in repository pubblici
-- **CORS**: Configurazione appropriata per API esterne
-
-## Testing e Debug
-
-### Debug Mode
-- Abilitare `CONFIG.APP.DEBUG = true` per logs dettagliati
-- Console browser per monitoraggio errori
-- Network tab per verificare chiamate API
-
-### Testing Strategy
-- **Manual Testing**: Verifiche funzionalità principali
-- **Cross-browser**: Chrome, Firefox, Safari, Edge
-- **Mobile Testing**: iOS Safari, Android Chrome
-- **Performance**: Lighthouse audit
-
-## Considerazioni Performance
-
-### Ottimizzazioni Implementate
-- **Lazy Loading**: Caricamento dati on-demand per vista
-- **Local Storage**: Cache per ridurre chiamate API
-- **CSS Efficient**: Grid/Flexbox nativi senza framework
-- **Minimal Dependencies**: Solo librerie essenziali
+### Ottimizzazioni
+- Bundle size < 100KB
+- Lazy loading dati per vista
+- Cache localStorage
+- CSS nativo (no framework)
 
 ### Monitoraggio
-- **Bundle Size**: Mantenere JavaScript sotto 100KB
-- **Load Time**: Target sotto 2 secondi
-- **Mobile Performance**: Priorità user experience mobile
+- Console logs per debug
+- Error tracking
+- Performance audit con Lighthouse
 
-## Supporto e Manutenzione
+## Manutenzione
 
-### Log e Monitoring
-- Console logs per debug (CONFIG.APP.DEBUG)
-- Error tracking via ConfigUtils.error()
-- User feedback via alert (da migliorare con toast)
+### Best Practices
+- Separation of concerns
+- Progressive enhancement
+- Error handling robusto
+- Documentazione inline
 
-### Backup Strategy
-- **Database**: Backup automatico Supabase
-- **LocalStorage**: Export manuale dati utente
-- **Code**: Version control Git
+### Testing
+- Manual testing cross-browser
+- Mobile testing (iOS/Android)
+- Performance testing
+- Accessibilità
 
-Questo piano fornisce una roadmap completa per lo sviluppo e la manutenzione dell'applicazione, mantenendo focus su semplicità, scalabilità e user experience.
+L'architettura è progettata per semplicità, manutenibilità e scalabilità futura.
