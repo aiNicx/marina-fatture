@@ -67,22 +67,31 @@ LLM: {
 }
 ```
 
-**⚠️ Nota per il Deploy**: L'app funziona anche senza API key AI (userà solo localStorage per i dati).
+**⚠️ Nota**: L'app include già configurazione database demo. Per uso locale, inserisci le tue API keys in `js/config.js`.
 
 ### 4. Deploy su Netlify
 
-#### Opzione A: Deploy Semplice
-1. **Drag & drop** la cartella su [Netlify](https://netlify.com)
-2. **Deploy automatico** - nessuna configurazione richiesta!
-3. L'app funzionerà con localStorage (dati locali nel browser)
+#### Deploy rapido (consigliato):
+1. **Push su GitHub** (vedi istruzioni sotto)
+2. **Connetti repository** su [Netlify](https://netlify.com) 
+3. **Deploy automatico** - zero configurazione!
+4. **Redeploy automatico** ad ogni push su GitHub
 
-#### Opzione B: Deploy con Database Cloud (Consigliato)
-1. **Deploy** il repository su Netlify via GitHub
-2. **Aggiungi variabili d'ambiente** nel dashboard Netlify:
-   - `SUPABASE_URL`: Il tuo URL Supabase
-   - `SUPABASE_ANON_KEY`: La tua chiave anonima Supabase
-   - `OPENROUTER_API_KEY`: La tua API key OpenRouter (opzionale)
-3. **Redeploy** automatico ad ogni push su GitHub
+#### Deploy manuale:
+1. **Drag & drop** la cartella su [Netlify](https://netlify.com)
+2. **Funziona subito** con database demo incluso!
+
+## 🚀 Push su GitHub
+
+Dopo aver creato il repository su GitHub:
+
+```bash
+# Aggiungi il repository remoto (sostituisci con il tuo username)
+git remote add origin https://github.com/TUO_USERNAME/marina-fatture.git
+
+# Push del codice
+git push -u origin main
+```
 
 ## 💡 Come Usare
 
