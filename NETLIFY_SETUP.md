@@ -15,8 +15,9 @@
 4. Seleziona il branch principale (main/master)
 
 #### B. Configurazione Build
-- **Build command**: `echo 'Build completato'`
-- **Publish directory**: `.` (root del progetto)
+- **Build command**: lascia **VUOTO** (non serve build)
+- **Publish directory**: `.` (punto, root del progetto)  
+- **Functions directory**: `netlify/functions` (auto-rilevato)
 
 #### C. **IMPORTANTE: Variabili d'Ambiente**
 1. Vai su **Site settings** → **Environment variables**
@@ -26,57 +27,14 @@
    Value: la-tua-api-key-openrouter
    ```
 
-### 3. Script di Inject per le Variabili
+### 3. ✅ Funzioni Netlify (GIÀ CONFIGURATE)
 
-Netlify ha bisogno di un modo per iniettare le variabili nel browser. Crea questo file:
+Il progetto include già:
+- `netlify/functions/inject-env.js` - Inietta le variabili d'ambiente
+- `index.html` aggiornato per caricare le variabili
+- `netlify.toml` configurato correttamente
 
-**`netlify/functions/inject-env.js`**:
-```javascript
-exports.handler = async (event, context) => {
-  const html = `
-    <script>
-      window.OPENROUTER_API_KEY = "${process.env.OPENROUTER_API_KEY || ''}";
-    </script>
-  `;
-  
-  return {
-    statusCode: 200,
-    headers: { 'Content-Type': 'text/html' },
-    body: html
-  };
-};
-```
-
-### 4. Aggiorna index.html
-
-Aggiungi prima degli altri script:
-```html
-<script src="/.netlify/functions/inject-env"></script>
-```
-
-### 5. Alternativa: Build-time Injection
-
-Se preferisci, puoi usare un build script che inietta le variabili:
-
-**`build.sh`**:
-```bash
-#!/bin/bash
-echo "Iniettando variabili d'ambiente..."
-
-# Crea il file con le variabili
-cat > js/env-vars.js << EOF
-window.OPENROUTER_API_KEY = "${OPENROUTER_API_KEY}";
-EOF
-
-echo "Build completato!"
-```
-
-Poi in netlify.toml:
-```toml
-[build]
-  command = "chmod +x build.sh && ./build.sh"
-  publish = "."
-```
+**Non serve fare nulla di extra** - tutto è già pronto!
 
 ## 🔧 Testing Locale
 
@@ -109,16 +67,31 @@ localStorage.setItem('OPENROUTER_API_KEY', 'sk-or-v1-la-tua-chiave-qui');
 2. **Variabili cambiate** → Redeploy dal dashboard Netlify
 3. **Errori** → Controlla i logs in Netlify → Site overview → Functions
 
+## 🚨 Fix per Errore Build
+
+Se il build fallisce con errore plugin, è già stato risolto! Il `netlify.toml` è stato aggiornato per rimuovere plugin non necessari.
+
+**Soluzione**:
+1. Fai un nuovo commit con i file aggiornati
+2. Push su GitHub
+3. Netlify rifarà automaticamente il deploy
+
 ## 📞 Troubleshooting
 
-### Chat non funziona:
+### ❌ Build Failed:
+- Verifica che `netlify.toml` non contenga plugin
+- Build command dovrebbe essere vuoto o molto semplice
+- Publish directory = `.` (punto)
+
+### ❌ Chat non funziona:
 1. Controlla che OPENROUTER_API_KEY sia impostata in Netlify
-2. Verifica nei Developer Tools se la variabile è caricata
-3. Controlla i logs della console per errori API
+2. Verifica nei Developer Tools: `window.OPENROUTER_API_KEY`
+3. Vai su `tuosito.netlify.app/.netlify/functions/inject-env` per vedere se la funzione funziona
 
-### 401 Unauthorized:
-- API key scaduta o non valida
-- Controlla che la key sia corretta in Netlify
+### ❌ 401 Unauthorized:
+- API key scaduta o non valida su OpenRouter
+- Controlla che la variabile sia impostata correttamente in Netlify
 
-### CORS Errors:
-- Aggiungi il dominio Netlify nelle impostazioni OpenRouter
+### ❌ Funzione non trovata:
+- Verifica che la directory `netlify/functions/` esista
+- File `inject-env.js` deve essere presente
