@@ -422,6 +422,7 @@ class MarinaFattureApp {
                 <div class="empty-state">
                     <h3>LLM non configurato</h3>
                     <p>Configura la tua API key di OpenRouter in js/config.js per abilitare i report intelligenti</p>
+                    <p><small>Modello attuale: ${CONFIG.LLM.MODEL_ID}</small></p>
                 </div>
             `;
             return;
@@ -490,6 +491,8 @@ class MarinaFattureApp {
     }
     
     formatReportContent(content) {
+        if (!content) return '<p>Nessun contenuto ricevuto</p>';
+        
         // Formatta il contenuto del report per una migliore visualizzazione
         return content
             .replace(/\n\n/g, '</p><p>')

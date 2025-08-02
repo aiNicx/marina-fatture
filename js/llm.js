@@ -2,6 +2,7 @@
 class LLMManager {
     constructor() {
         this.isConfigured = ConfigUtils.isLLMConfigured();
+        this.lastError = null;
     }
     
     // Invia una richiesta al modello LLM
@@ -50,7 +51,19 @@ class LLMManager {
             
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(`Errore API: ${response.status} - ${errorData.error?.message || 'Errore sconosciuto'}`);
+                let errorMessage = `Errore API: ${response.status}`;
+                
+                if (response.status === 401) {
+                    errorMessage += ' - API key non valida o scaduta. Verifica la configurazione in js/config.js';
+                } else if (response.status === 400) {
+                    errorMessage += ' - Richiesta non valida. Verifica il modello specificato';
+                } else if (response.status === 429) {
+                    errorMessage += ' - Limite di rate raggiunto. Riprova più tardi';
+                } else {
+                    errorMessage += ` - ${errorData.error?.message || 'Errore sconosciuto'}`;
+                }
+                
+                throw new Error(errorMessage);
             }
             
             const data = await response.json();
@@ -67,6 +80,7 @@ class LLMManager {
             
         } catch (error) {
             ConfigUtils.error('Errore LLM:', error);
+            this.lastError = error.message;
             return {
                 success: false,
                 error: error.message
