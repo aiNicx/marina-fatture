@@ -692,11 +692,12 @@ class MarinaFattureApp {
                 return;
             }
             
+            // Prepara loading
+            document.body.style.cursor = 'wait';
+            const submitBtn = document.querySelector('#invoice-modal button[type="submit"]');
+            const originalText = submitBtn ? submitBtn.textContent : 'Salva';
+            
             try {
-                // Mostra loading
-                document.body.style.cursor = 'wait';
-                const submitBtn = document.querySelector('#invoice-modal button[type="submit"]');
-                const originalText = submitBtn ? submitBtn.textContent : 'Salva';
                 if (submitBtn) submitBtn.textContent = 'Estraendo dati...';
                 
                 // Estrai dati con LLM
@@ -729,7 +730,6 @@ class MarinaFattureApp {
             } finally {
                 // Rimuovi loading
                 document.body.style.cursor = 'default';
-                const submitBtn = document.querySelector('#invoice-modal button[type="submit"]');
                 if (submitBtn) submitBtn.textContent = originalText;
             }
         };

@@ -336,7 +336,7 @@ ${paidInvoices.slice(0, 5).map(i =>
             
             // Valida e normalizza i campi
             let importo = extracted.importo || extracted.amount || extracted.total || '';
-            let data = extracted.data || extracted.date || '';
+            let dataField = extracted.data || extracted.date || '';
             
             // Normalizza importo: aggiunge decimali se mancano
             if (importo && typeof importo === 'string') {
@@ -354,12 +354,12 @@ ${paidInvoices.slice(0, 5).map(i =>
             }
             
             // Normalizza data: converte in formato YYYY-MM-DD
-            if (data && typeof data === 'string') {
+            if (dataField && typeof dataField === 'string') {
                 // Gestisce formato DD/MM/YYYY -> YYYY-MM-DD
-                const dateMatch = data.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+                const dateMatch = dataField.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
                 if (dateMatch) {
                     const [, day, month, year] = dateMatch;
-                    data = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+                    dataField = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
                 }
             }
             
@@ -367,7 +367,7 @@ ${paidInvoices.slice(0, 5).map(i =>
                 numero: extracted.numero || extracted.number || '',
                 fornitore: extracted.fornitore || extracted.supplier || extracted.nome || '',
                 importo: importo,
-                data: data
+                data: dataField
             };
             
             console.log('Dati estratti:', result);
