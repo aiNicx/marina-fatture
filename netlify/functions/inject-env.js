@@ -1,15 +1,21 @@
 // Funzione Netlify per iniettare le variabili d'ambiente
 exports.handler = async (event, context) => {
+  // Ottieni le variabili d'ambiente lato server
+  const openRouterKey = process.env.OPENROUTER_API_KEY || '';
+  const nodeEnv = process.env.NODE_ENV || 'production';
+  const hasKey = !!openRouterKey;
+  
   // Genera lo script che definisce le variabili globali
   const envScript = `
     // Variabili d'ambiente iniettate da Netlify
-    window.OPENROUTER_API_KEY = "${process.env.OPENROUTER_API_KEY || ''}";
+    window.OPENROUTER_API_KEY = "${openRouterKey}";
     
     // Debug info (solo se in sviluppo)
     if (window.location.hostname === 'localhost' || window.location.hostname.includes('netlify')) {
       console.log('Environment variables loaded:', {
-        hasOpenRouterKey: !!(process.env.OPENROUTER_API_KEY),
-        nodeEnv: "${process.env.NODE_ENV || 'production'}"
+        hasOpenRouterKey: ${hasKey},
+        nodeEnv: "${nodeEnv}",
+        keyLength: ${openRouterKey.length}
       });
     }
   `;

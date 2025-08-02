@@ -95,3 +95,25 @@ Se il build fallisce con errore plugin, è già stato risolto! Il `netlify.toml`
 ### ❌ Funzione non trovata:
 - Verifica che la directory `netlify/functions/` esista
 - File `inject-env.js` deve essere presente
+
+## 🧪 Pagina di Test
+
+Per debug completo, è stata inclusa una pagina di test:
+
+**URL**: `tuosito.netlify.app/test-env.html`
+
+**Cosa verifica**:
+- ✅ Caricamento variabili d'ambiente da Netlify
+- ✅ Configurazione CONFIG.LLM.API_KEY
+- ✅ Stato LLM Manager
+- ✅ Debug automatico con info dettagliate
+
+**Debug manuale nella console**:
+```javascript
+// Verifica rapida
+console.log('API Key:', window.OPENROUTER_API_KEY ? 'FOUND' : 'MISSING');
+console.log('Config:', window.CONFIG?.LLM?.API_KEY ? 'OK' : 'MISSING');
+
+// Ricarica configurazione
+window.loadEnvironmentConfig();
+```

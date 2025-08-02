@@ -6,21 +6,23 @@
     
     // Funzione per caricare le variabili d'ambiente
     function loadEnvironmentVariables() {
-        // Per Netlify: le variabili sono iniettate durante il build
         if (typeof window !== 'undefined') {
             window.ENV = window.ENV || {};
             
-            // Carica da variabili iniettate da Netlify
-            if (typeof OPENROUTER_API_KEY !== 'undefined') {
-                window.ENV.OPENROUTER_API_KEY = OPENROUTER_API_KEY;
+            // Netlify: le variabili sono già disponibili come window.OPENROUTER_API_KEY
+            // tramite la funzione inject-env
+            if (window.OPENROUTER_API_KEY) {
+                window.ENV.OPENROUTER_API_KEY = window.OPENROUTER_API_KEY;
+                console.log('Variabile d\'ambiente caricata da Netlify');
+                return;
             }
             
             // Fallback per sviluppo locale
-            // In produzione, NON usare mai questo metodo
-            if (!window.ENV.OPENROUTER_API_KEY && typeof localStorage !== 'undefined') {
+            if (typeof localStorage !== 'undefined') {
                 const localKey = localStorage.getItem('OPENROUTER_API_KEY');
                 if (localKey) {
                     window.ENV.OPENROUTER_API_KEY = localKey;
+                    window.OPENROUTER_API_KEY = localKey; // Per compatibilità
                     console.warn('Usando API key da localStorage - solo per sviluppo!');
                 }
             }
@@ -36,11 +38,17 @@
             localStorage.setItem('OPENROUTER_API_KEY', apiKey);
             window.ENV = window.ENV || {};
             window.ENV.OPENROUTER_API_KEY = apiKey;
+            window.OPENROUTER_API_KEY = apiKey; // Per compatibilità
             console.log('API key impostata per sviluppo locale');
             
-            // Ricarica la configurazione
-            if (typeof loadEnvironmentConfig === 'function') {
-                loadEnvironmentConfig();
+            // Ricarica la configurazione se disponibile
+            if (typeof window.CONFIG !== 'undefined' && window.loadEnvironmentConfig) {
+                window.loadEnvironmentConfig();
+            }
+            
+            // Ricarica anche il LLM manager se disponibile
+            if (typeof window.llmManager !== 'undefined') {
+                window.llmManager.isConfigured = !!(apiKey && apiKey.trim() !== '');
             }
         }
     };

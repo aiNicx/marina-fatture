@@ -73,21 +73,59 @@ Quando possibile, fornisci suggerimenti pratici e actionable.`,
 
 // Carica configurazione dalle variabili d'ambiente
 function loadEnvironmentConfig() {
-    // Per Netlify e altri servizi di hosting, le variabili sono disponibili come window.ENV o process.env
-    if (typeof window !== 'undefined' && window.ENV) {
-        CONFIG.LLM.API_KEY = window.ENV.OPENROUTER_API_KEY || '';
-    } else if (typeof process !== 'undefined' && process.env) {
-        CONFIG.LLM.API_KEY = process.env.OPENROUTER_API_KEY || '';
+    // Netlify carica le variabili tramite la funzione inject-env
+    if (typeof window !== 'undefined' && window.OPENROUTER_API_KEY) {
+        CONFIG.LLM.API_KEY = window.OPENROUTER_API_KEY;
+        console.log('API Key caricata da window.OPENROUTER_API_KEY');
+        return;
+    }
+    
+    // Fallback per altre piattaforme
+    if (typeof window !== 'undefined' && window.ENV && window.ENV.OPENROUTER_API_KEY) {
+        CONFIG.LLM.API_KEY = window.ENV.OPENROUTER_API_KEY;
+        console.log('API Key caricata da window.ENV');
+        return;
     }
     
     // Fallback per sviluppo locale - legge da localStorage se disponibile
-    if (!CONFIG.LLM.API_KEY && typeof localStorage !== 'undefined') {
-        CONFIG.LLM.API_KEY = localStorage.getItem('OPENROUTER_API_KEY') || '';
+    if (typeof localStorage !== 'undefined') {
+        const localKey = localStorage.getItem('OPENROUTER_API_KEY');
+        if (localKey) {
+            CONFIG.LLM.API_KEY = localKey;
+            console.log('API Key caricata da localStorage (sviluppo locale)');
+            return;
+        }
     }
+    
+    console.warn('Nessuna API Key trovata - chat AI non configurata');
 }
 
 // Carica la configurazione all'avvio
 loadEnvironmentConfig();
+
+// Esponi la funzione globalmente per permettere la ricarica
+window.loadEnvironmentConfig = loadEnvironmentConfig;
+
+// Ricarica la configurazione quando le variabili sono disponibili
+// Questo gestisce il caso in cui inject-env viene caricato dopo config.js
+if (typeof window !== 'undefined') {
+    // Controlla periodicamente se le variabili sono state caricate
+    let checkCount = 0;
+    const maxChecks = 10;
+    
+    const checkForVariables = () => {
+        if (window.OPENROUTER_API_KEY && !CONFIG.LLM.API_KEY) {
+            loadEnvironmentConfig();
+            console.log('Configurazione ricaricata dopo caricamento variabili');
+        } else if (checkCount < maxChecks) {
+            checkCount++;
+            setTimeout(checkForVariables, 100);
+        }
+    };
+    
+    // Inizia il controllo dopo un breve delay
+    setTimeout(checkForVariables, 100);
+}
 
 // Funzioni di utilità per la configurazione
 const ConfigUtils = {
